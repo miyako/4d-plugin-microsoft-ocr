@@ -20,6 +20,8 @@ To enable `co_await`
 
 The project requires `10.0.17763` SDK, released in conjunction with Windows 10 version 1809.
 
+To use on v17, move manifest.json to contents.
+
 #### Example
 
 ```4d
