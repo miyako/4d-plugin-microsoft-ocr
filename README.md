@@ -16,7 +16,7 @@ To enable `co_await`
 * set the c++ language standard to `ISO C++ Latest Draft Standard (/std:c++latest)`
 * add `windowsapp.lib` to additional libraries
 
-[image](https://github.com/miyako/4d-plugin-microsoft-ocr/blob/main/OCR/test/Resources/4d-website-jpr.jpg)
+![image](https://github.com/miyako/4d-plugin-microsoft-ocr/blob/main/OCR/test/Resources/4d-website-jpr.jpg)
 
 The project requires `10.0.17763` SDK, released in conjunction with Windows 10 version 1809.
 
