@@ -16,8 +16,6 @@ To enable `co_await`
 * set the c++ language standard to `ISO C++ Latest Draft Standard (/std:c++latest)`
 * add `windowsapp.lib` to additional libraries
 
-![image](https://github.com/miyako/4d-plugin-microsoft-ocr/blob/main/OCR/test/Resources/4d-website-jpr.jpg)
-
 The project requires `10.0.17763` SDK, released in conjunction with Windows 10 version 1809.
 
 #### Example
@@ -30,3 +28,4 @@ $status:=ocr get text ($data)
 
 ![screenshot](https://user-images.githubusercontent.com/1725068/103483342-f40c3b00-4e29-11eb-95ab-bfd62f265208.png)
 
+![image](https://github.com/miyako/4d-plugin-microsoft-ocr/blob/main/OCR/test/Resources/4d-website-jpr.jpg)
