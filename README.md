@@ -20,5 +20,11 @@ The project requires `10.0.17763` SDK, released in conjunction with Windows 10 v
 
 #### Example
 
+```4d
+$file:=Folder:C1567(fk resources folder:K87:11).file("4d-website-jpr.jpg")
+$data:=$file.getContent()
+$status:=ocr get text ($data)
+```
+
 ![screenshot](https://user-images.githubusercontent.com/1725068/103483342-f40c3b00-4e29-11eb-95ab-bfd62f265208.png)
 
