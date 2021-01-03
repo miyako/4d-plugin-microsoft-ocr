@@ -33,3 +33,9 @@ $status:=ocr get text ($data)
 ![screenshot](https://user-images.githubusercontent.com/1725068/103483342-f40c3b00-4e29-11eb-95ab-bfd62f265208.png)
 
 ![image](https://github.com/miyako/4d-plugin-microsoft-ocr/blob/main/OCR/test/Resources/4d-website-jpr.jpg)
+
+#### References
+
+* [Consume APIs with C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/consume-apis)
+* [More advanced concurrency and asynchrony with C++/WinRT](https://docs.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/concurrency-2)
+
