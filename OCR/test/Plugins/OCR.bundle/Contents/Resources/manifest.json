@@ -1,0 +1,16 @@
+{
+	"name": "OCR",
+	"id": 20000,
+  "commands": [
+    {
+      "theme": "OCR",
+      "syntax": "ocr get text(&O;&T):J",
+      "threadSafe": true
+    },
+    {
+      "theme": "OCR",
+      "syntax": "ocr get info:J",
+      "threadSafe": true
+    }
+  ]
+}
