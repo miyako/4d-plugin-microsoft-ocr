@@ -4,7 +4,7 @@
 ![downloads](https://img.shields.io/github/downloads/miyako/4d-plugin-microsoft-ocr/total)
 
 # 4d-plugin-microsoft-ocr
-Use native OCR (C++/WinRT) on Windows.
+Use native OCR on Windows.
 
 Thanks to [C++/WinRT](https://blogs.windows.com/windowsdeveloper/2016/11/28/standard-c-windows-runtime-cwinrt/), it is no longer necessary to use all sorts of [tricks](https://qiita.com/Yukio-Ichikawa/items/f8d3111a60a337adfd48) to call [Universal Windows Platform](https://en.wikipedia.org/wiki/Universal_Windows_Platform) API from C++. 
 
