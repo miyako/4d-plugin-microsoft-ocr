@@ -15,3 +15,7 @@ To enable `co_await`
 * add the compiler flag `/await` to project
 * set the c++ language standard to `ISO C++ Latest Draft Standard (/std:c++latest)`
 * add `windowsapp.lib` to additional libraries
+
+#### Example
+
+<img width="900" alt="screenshot" src="https://user-images.githubusercontent.com/1725068/103483067-100edd00-4e28-11eb-82ac-b52cb5030368.png">
