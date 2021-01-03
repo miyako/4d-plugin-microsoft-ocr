@@ -20,4 +20,5 @@ The project requires `10.0.17763` SDK, released in conjunction with Windows 10 v
 
 #### Example
 
-<img width="900" alt="screenshot" src="https://user-images.githubusercontent.com/1725068/103483067-100edd00-4e28-11eb-82ac-b52cb5030368.png">
+![screenshot](https://user-images.githubusercontent.com/1725068/103483342-f40c3b00-4e29-11eb-95ab-bfd62f265208.png)
+
