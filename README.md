@@ -16,6 +16,8 @@ To enable `co_await`
 * set the c++ language standard to `ISO C++ Latest Draft Standard (/std:c++latest)`
 * add `windowsapp.lib` to additional libraries
 
+The project requires `10.0.17763` SDK, released in conjunction with Windows 10 version 1809.
+
 #### Example
 
 <img width="900" alt="screenshot" src="https://user-images.githubusercontent.com/1725068/103483067-100edd00-4e28-11eb-82ac-b52cb5030368.png">
