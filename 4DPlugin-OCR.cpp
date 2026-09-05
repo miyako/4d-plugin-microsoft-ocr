@@ -123,7 +123,7 @@ not used because sync is easier in 4D
 
 #if VERSIONWIN
 
-static task<void> task_ocr_picture_data(std::vector<byte>& buf, std::wstring& result) {
+static task<void> task_ocr_picture_data(std::vector<uint8_t>& buf, std::wstring& result) {
 
 	IBuffer buffer = CryptographicBuffer::CreateFromByteArray(buf);
 	InMemoryRandomAccessStream randomAccessStream;
@@ -200,11 +200,11 @@ static void get_info(PA_ObjectRef returnValue){
 
 #if VERSIONWIN
 
-static task<ocr_result> ocr_get_string(std::vector<byte>& buf, std::wstring& lang)
+static task<ocr_result> ocr_get_string(std::vector<uint8_t>& buf, std::wstring& lang)
 {
 	ocr_result result;
 
-	auto b = std::make_shared< std::vector<byte> >(buf);
+	auto b = std::make_shared< std::vector<uint8_t> >(buf);
 	auto l = std::make_shared< std::wstring >(lang);
 	auto r = std::make_shared< ocr_result >(result);
 
@@ -290,7 +290,7 @@ void ocr_picture_data(PA_PluginParameters params) {
 
 	if (len)
 	{
-		std::vector<byte>buf(len);
+		std::vector<uint8_t>buf(len);
 		PA_GetBlobParameter(params, 1, &buf[0]);
 
 		PA_Unistring *ustr = PA_GetStringParameter(params, 2);

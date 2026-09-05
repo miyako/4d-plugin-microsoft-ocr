@@ -18,6 +18,7 @@
 #if VERSIONWIN
 
 #include <vector>
+#include <cstdint>
 
 #include "winrt/base.h"
 #include <winrt/Windows.Foundation.h>
