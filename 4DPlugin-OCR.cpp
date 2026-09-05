@@ -165,18 +165,34 @@ static void get_info(PA_ObjectRef returnValue){
 
 #if VERSIONWIN
 
-    auto languages = OcrEngine::AvailableRecognizerLanguages();
-    
-	for (auto const& language : languages)
+	/*
+	any WinRT failure here must not propagate out uncaught: PluginMain's
+	outer catch(...) would swallow it after skipping PA_ReturnObject,
+	leaving the 4D host waiting for a return value that never comes
+	*/
+	try
 	{
-		PA_ObjectRef o = PA_CreateObject();
-		ob_set_a(o, L"nativeName", (const wchar_t *)language.NativeName().c_str());
-		ob_set_a(o, L"displayName", (const wchar_t *)language.DisplayName().c_str());
-		ob_set_a(o, L"languageTag", (const wchar_t *)language.LanguageTag().c_str());
-		ob_set_a(o, L"script", (const wchar_t *)language.Script().c_str());
-		collection_push(c, o);
+		auto languages = OcrEngine::AvailableRecognizerLanguages();
+
+		for (auto const& language : languages)
+		{
+			PA_ObjectRef o = PA_CreateObject();
+			ob_set_a(o, L"nativeName", (const wchar_t *)language.NativeName().c_str());
+			ob_set_a(o, L"displayName", (const wchar_t *)language.DisplayName().c_str());
+			ob_set_a(o, L"languageTag", (const wchar_t *)language.LanguageTag().c_str());
+			ob_set_a(o, L"script", (const wchar_t *)language.Script().c_str());
+			collection_push(c, o);
+		}
 	}
-    
+	catch (winrt::hresult_error const& ex)
+	{
+		ob_set_a(returnValue, L"error", (const wchar_t *)ex.message().c_str());
+	}
+	catch (...)
+	{
+		ob_set_a(returnValue, L"error", L"unknown error retrieving OCR languages");
+	}
+
 #endif
     
 	ob_set_c(returnValue, L"languages", c);
@@ -201,9 +217,37 @@ static task<ocr_result> ocr_get_string(std::vector<byte>& buf, std::wstring& lan
 		BitmapDecoder decoder = BitmapDecoder::CreateAsync(randomAccessStream).get();
 		SoftwareBitmap bitmap = decoder.GetSoftwareBitmapAsync(BitmapPixelFormat::Bgra8, BitmapAlphaMode::Premultiplied).get();
 
-		Windows::Globalization::Language language(*l);
+		/*
+		an empty/blank language tag is a normal, documented input (the plugin's
+		1-argument "ocr get text" form omits it) - Windows::Globalization::Language
+		throws if constructed from a tag that isn't a well-formed BCP-47 tag, and
+		an empty string is never well-formed, so it must not be constructed
+		unconditionally
+		*/
+		OcrEngine engine{ nullptr };
+		if (!l->empty() && Windows::Globalization::Language::IsWellFormed(*l))
+		{
+			Windows::Globalization::Language language(*l);
+			engine = OcrEngine::IsLanguageSupported(language) ?
+				OcrEngine::TryCreateFromLanguage(language) :
+				OcrEngine::TryCreateFromUserProfileLanguages();
+		}
+		else
+		{
+			engine = OcrEngine::TryCreateFromUserProfileLanguages();
+		}
 
-		auto engine = OcrEngine::IsLanguageSupported(language) ? OcrEngine::TryCreateFromLanguage(language) : OcrEngine::TryCreateFromUserProfileLanguages();
+		/*
+		TryCreateFromLanguage / TryCreateFromUserProfileLanguages return null
+		(they do not throw) when no matching OCR language pack is installed on
+		the machine - calling RecognizeAsync on a null engine is a null WinRT
+		call and crashes the host, so this must be checked before using it
+		*/
+		if (!engine)
+		{
+			*r = ocr_result(hstring(L""), ocr_lines());
+			return;
+		}
 
 		ocr_lines www;
 
@@ -255,39 +299,57 @@ void ocr_picture_data(PA_PluginParameters params) {
 			lang = std::wstring((const wchar_t*)ustr->fString, ustr->fLength);
 		}
 
-		/*
-		call a task from a task, because the get() method will throw a debug error
-		!is_sta() when a blocking call is made from the main thread
-		*/
-
-		auto t = ocr_get_string(buf, lang);
-
-		ocr_result ocr = t.get();
-
-		std::wstring text = ocr.first.c_str();
-
-		ob_set_a(returnValue, L"fullText", (const wchar_t *)text.c_str());
-
-		auto lines = ocr.second;
-
-		PA_CollectionRef l = PA_CreateCollection();
-		for (auto const& words : lines)
+		try
 		{
-			PA_CollectionRef w = PA_CreateCollection();
-			for (auto const& word : words)
+			/*
+			call a task from a task, because the get() method will throw a debug error
+			!is_sta() when a blocking call is made from the main thread
+			*/
+
+			auto t = ocr_get_string(buf, lang);
+
+			ocr_result ocr = t.get();
+
+			std::wstring text = ocr.first.c_str();
+
+			ob_set_a(returnValue, L"fullText", (const wchar_t *)text.c_str());
+
+			auto lines = ocr.second;
+
+			PA_CollectionRef l = PA_CreateCollection();
+			for (auto const& words : lines)
 			{
-				PA_ObjectRef o = PA_CreateObject();
-				ob_set_a(o, L"word", (const wchar_t *)word.first.c_str());
-				Rect rect = word.second;
-				ob_set_n(o, L"x", rect.X);
-				ob_set_n(o, L"y", rect.Y);
-				ob_set_n(o, L"height", rect.Height);
-				ob_set_n(o, L"width", rect.Width);
-				collection_push(w, o);
+				PA_CollectionRef w = PA_CreateCollection();
+				for (auto const& word : words)
+				{
+					PA_ObjectRef o = PA_CreateObject();
+					ob_set_a(o, L"word", (const wchar_t *)word.first.c_str());
+					Rect rect = word.second;
+					ob_set_n(o, L"x", rect.X);
+					ob_set_n(o, L"y", rect.Y);
+					ob_set_n(o, L"height", rect.Height);
+					ob_set_n(o, L"width", rect.Width);
+					collection_push(w, o);
+				}
+				collection_push_c(l, w);
 			}
-			collection_push_c(l, w);
+			ob_set_c(returnValue, L"lines", l);
 		}
-		ob_set_c(returnValue, L"lines", l);
+		catch (winrt::hresult_error const& ex)
+		{
+			/*
+			any WinRT failure here (corrupt/non-image blob data, unsupported
+			pixel format, decode failure, etc.) must still reach PA_ReturnObject
+			below - an uncaught exception here would previously be swallowed by
+			PluginMain's outer catch(...) *after* skipping PA_ReturnObject,
+			which hangs the 4D host waiting for a return that never comes
+			*/
+			ob_set_a(returnValue, L"error", (const wchar_t *)ex.message().c_str());
+		}
+		catch (...)
+		{
+			ob_set_a(returnValue, L"error", L"unknown error during OCR processing");
+		}
 	}	
 
 #endif
