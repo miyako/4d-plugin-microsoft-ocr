@@ -5,6 +5,79 @@
 
 # 4d-plugin-microsoft-ocr
 
+## Manual source bump and publication
+
+Run **Bump version** on an explicitly selected branch with `patch`, `minor`, or
+`major`. It commits only the three source version files and pushes one direct
+child of the selected dispatch SHA. It never tags, dispatches Build, or publishes.
+The branch must still advertise that exact SHA when the guarded push starts;
+advance, rewind, deletion and even a concurrent identical-result push fail closed.
+The executable `.github/scripts/bump-hooks/pre-push` is mandatory at both checks.
+
+Run **Build** separately using only Actions' branch selector (no inputs).
+Every checkout uses the immutable dispatch `github.sha`. Source validation derives
+`vX.Y.Z`, `OCR-X.Y.Z.zip` and `OCR-X.Y.Z.dmg`; tags are not build inputs.
+Publication is serialized across branches. Both before building and after all
+native/signing/notarization/stapling gates, an authenticated, fully paginated release
+scan (including drafts) and an exact remote tag check must establish availability.
+Authentication, 404, network, malformed-response and later-page errors stop the run.
+Publication creates a new lightweight tag at the selected SHA, verifies it remotely,
+creates a new public non-prerelease named for the tag with an empty body (the original
+notes behavior), then uploads both assets to that new release ID. Nothing is reused,
+updated, overwritten, deleted, retried or rolled back.
+
+The existing `v1.0.4` tag and release are intentionally untouched. After merging this
+migration, run Bump version before the first Build; building the intake version
+must refuse the already-published name.
+
+**Partial publication recovery:** inspect the failing run and the retained tag,
+release ID and uploaded assets. A tag or partial release can remain if a later
+operation fails; rerunning the same version deliberately refuses it. An operator
+must review and resolve that state manually, or bump source metadata on the branch
+and dispatch Build for a new version. Never expect automated cleanup or replacement.
+
+**Version authority and migration evidence:** the original bump workflow was added
+at `9a84a458ae19674e4d247b0aba14682d24df0c1f` (rename-follow history ends there;
+the project and localization trace through the `OCR/` move to the first commit).
+Its header explicitly promises to write the same version into
+`MARKETING_VERSION`, `CURRENT_PROJECT_VERSION`, and the plist version keys.
+That coordinated promise overrides its buggy marketing-first implementation.
+All six existing project/target configurations therefore remain coordinated.
+At intake, marketing and source `Info.plist` were `1.0.4`, but the six build settings
+and both copied English display strings were still `1.0.0`. This migration repairs
+only those proven stale values to the **existing `1.0.4`**, without an increment.
+`Info.plist` has no `CFBundleVersion`: it stays absent. Supported build references,
+UTF-8 BOM, CR-only/CRLF/mixed endings, modes, copyright and unrelated bytes are
+preserved. Invalid references, duplicates and unsupported serializations are rejected
+before writes. Prebuilt bundles, archives, dependencies, 4D data/schema and counters
+are not source version authorities and are not rewritten.
+
+The original release workflow actually builds Windows x64 using MSBuild/v143/SDK10,
+then macOS arm64+x86_64 with Xcode's `Default` target configuration, merges Windows
+into the bundle, signs/verifies, notarizes ZIP and DMG and staples the DMG. That
+pipeline is retained, independently of the runtime support description below.
+Freshness fixes invalidate only exact native outputs, stale signatures and the
+source-derived copied plist/localized version files that Xcode regenerates,
+preserving all other committed resources and cross-platform binaries. Output
+selection is exact rather than recursive. Architecture verification requires
+exactly the universal pair, and both notary results must be `Accepted` before staple
+and publication. Certificate/notary secret names and native project settings,
+dependencies, frameworks and resource copy phases are unchanged.
+
+The implementation adapts the complete workflows/helpers/tests from
+`miyako/4d-plugin-native-encoding-detection@c42ca565857f674bde5ea6ed3435c87375eda4a7`
+(six coordinated settings, strict strings tokenizer and fail-closed cleanup) and
+`miyako/4d-plugin-file-information@19848973601acfd3a2b5070230fa40cdc7e4edb2`
+(built UTF-16/binary strings and architecture rejection). The independent-build
+contracts in `miyako/4d-plugin-common-string-algorithm@2606a68201866ec9fcbb38b51462d79215f504ef`
+and corrected `miyako/4d-plugin-window-button@3f14facb9aaaaff0e22eeb8e07531163680c3a8a`
+were compared, not transplanted: OCR's explicit coordinated header is controlling.
+
+Offline checks: `actionlint` and
+`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s .github/tests -v`.
+These use disposable source copies, bare Git remotes, mocked GitHub responses and
+closed-PATH native command stubs, never native compilers, signing, notarization or 4D.
+
 This plugin runs native optical character recognition on Windows by driving the built-in `Windows.Media.Ocr` API through C++/WinRT — no cloud service, no external dependency, no network call. You pass it raw image bytes (a `Blob`) and it gives back an `Object` containing the recognized text, plus each recognized word's text and pixel-accurate bounding box.
 
 ## Summary
