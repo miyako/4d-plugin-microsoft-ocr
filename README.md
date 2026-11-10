@@ -76,7 +76,17 @@ were compared, not transplanted: OCR's explicit coordinated header is controllin
 Offline checks: `actionlint` and
 `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s .github/tests -v`.
 These use disposable source copies, bare Git remotes, mocked GitHub responses and
-closed-PATH native command stubs, never native compilers, signing, notarization or 4D.
+closed-PATH native command stubs, never signing, notarization or 4D.
+
+On macOS, `test_string_ownership.py` also uses clang to compile the real bundled
+SDK and JSON helpers against an ownership-tracking 4D callback shim. It checks all
+four string setter overloads with allocated and null empty-string representations,
+repeated Unicode/empty values, object-property consumption and final cleanup.
+String setter destinations start undefined: `PA_SetStringVariable` shallowly
+assigns its input and does not release an existing string descriptor, so creating
+a string variable first would discard its owned empty-string resource. The new
+string is released only through `PA_ClearVariable`; the key is disposed separately.
+The shim is not a Windows/WinRT build or a running 4D host memory test.
 
 This plugin runs native optical character recognition on Windows by driving the built-in `Windows.Media.Ocr` API through C++/WinRT — no cloud service, no external dependency, no network call. You pass it raw image bytes (a `Blob`) and it gives back an `Object` containing the recognized text, plus each recognized word's text and pixel-accurate bounding box.
 
